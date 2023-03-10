@@ -1,0 +1,286 @@
+#include "Poly.h"
+#include <vector>
+#include <string>
+#include <cmath>
+
+Poly::Poly()
+{
+	 head = new PolyNode(-1, 0.0, nullptr); // create the dummy header for the zero polynomial
+	 }
+
+Poly::Poly(const std::vector<int>& deg, const std::vector<double>& coeff)
+{
+	 head = new PolyNode(-1, 0.0, nullptr); // create the dummy header for the polynomial
+
+	        for (int i = 0; i < deg.size(); i++) {
+	            if (coeff[i] != 0) {
+	                PolyNode* newNode = new PolyNode(deg[i], coeff[i], nullptr);
+
+	                if (head->next == nullptr || deg[i] > head->next->deg) {
+	                    newNode->next = head->next;
+	                    head->next = newNode;
+	                } else {
+	                    PolyNode* current = head->next;
+	                    PolyNode* previous = head;
+
+	                    while (current != nullptr && deg[i] < current->deg) {
+	                        previous = current;
+	                        current = current->next;
+	                    }
+
+	                    if (current != nullptr && deg[i] == current->deg) {
+	                        current->coeff += coeff[i];
+
+	                        if (current->coeff == 0) {
+	                            previous->next = current->next;
+	                            delete current;
+	                        }
+	                    } else {
+	                        newNode->next = current;
+	                        previous->next = newNode;
+	                    }
+	                }
+	            }
+	        }
+	    }
+
+
+
+
+
+Poly::~Poly()
+{
+	PolyNode* current = head;
+	        PolyNode* temp;
+
+	        while (current != nullptr) {
+	            temp = current;
+	            current = current->next;
+	            delete temp;
+	        }
+
+}
+
+void Poly::addMono(int i, double c)
+{
+	 if (c == 0) {
+	            // do nothing if the coefficient is zero
+	            return;
+	        }
+
+	        if (head->next == nullptr) {
+	            // create a new node if the polynomial is empty
+	            PolyNode* newNode = new PolyNode(i, c, nullptr);
+	            head->next = newNode;
+	        } else {
+	            PolyNode* current = head->next;
+	            PolyNode* previous = head;
+
+	            while (current != nullptr && i < current->deg) {
+	                previous = current;
+	                current = current->next;
+	            }
+
+	            if (current != nullptr && i == current->deg) {
+	                // update the coefficient if the node with the same degree exists
+	                current->coeff += c;
+
+	                if (current->coeff == 0) {
+	                    // delete the node if the coefficient becomes zero
+	                    previous->next = current->next;
+	                    delete current;
+	                }
+	            } else {
+	                // create a new node and insert it before the current node
+	                PolyNode* newNode = new PolyNode(i, c, current);
+	                previous->next = newNode;
+	            }
+	        }
+	    }
+
+
+
+
+void Poly::addPoly(const Poly& p)
+{
+
+    PolyNode* curr1 = head->next;
+    PolyNode* curr2 = p.head->next;
+    PolyNode* prev = head;
+    while (curr1 != nullptr && curr2 != nullptr) {
+        if (curr1->deg == curr2->deg) {
+            curr1->coeff += curr2->coeff;
+            if (curr1->coeff == 0) {
+                prev->next = curr1->next;
+                delete curr1;
+                curr1 = prev->next;
+            }
+            else {
+                prev = curr1;
+                curr1 = curr1->next;
+            }
+            curr2 = curr2->next;
+        }
+        else if (curr1->deg > curr2->deg) {
+            prev = curr1;
+            curr1 = curr1->next;
+        }
+        else {
+            prev->next = new PolyNode(curr2->deg, curr2->coeff, curr1);
+            prev = prev->next;
+            curr2 = curr2->next;
+        }
+    }
+    while (curr2 != nullptr) {
+        prev->next = new PolyNode(curr2->deg, curr2->coeff, nullptr);
+        prev = prev->next;
+        curr2 = curr2->next;
+    }
+
+}
+
+void Poly::multiplyMono(int i, double c)
+{
+
+	if (c == 0) { // Multiplying with zero mono will result in zero polynomial
+	        head->next = nullptr;
+	        return;
+	    }
+
+	    PolyNode *cur = head->next;
+	    PolyNode *prev = head;
+
+	    // Multiply each term of the polynomial with the mono
+	    while (cur != nullptr) {
+	        cur->deg += i;
+	        cur->coeff *= c;
+
+	        // Check if this term is now zero
+	        if (cur->coeff == 0) {
+	            prev->next = cur->next;
+	            delete cur;
+	            cur = prev->next;
+	        } else {
+	            prev = cur;
+	            cur = cur->next;
+	        }
+	    }
+
+}
+
+
+
+void Poly::multiplyPoly(const Poly& p)
+{
+	Poly duplicatePoly;
+	duplicate(duplicatePoly);
+
+	PolyNode *temp = head;
+	while (temp->next != nullptr) {
+		PolyNode *temp1=temp->next;
+		temp->next = temp1->next;
+		delete temp1;
+		}
+
+	    // Multiply each term of this polynomial with each term of the other polynomial
+	    PolyNode* curr1 = duplicatePoly.head->next;
+	    while (curr1 != nullptr) {
+	        PolyNode* curr2 = p.head->next;
+	        while (curr2 != nullptr) {
+	            addMono(curr1->deg + curr2->deg, curr1->coeff * curr2->coeff);
+	            curr2 = curr2->next;
+	        }
+	        curr1 = curr1->next;
+	    }
+
+	    // Update this polynomial to be equal to the result polynomial
+
+
+
+
+}
+
+
+void Poly::duplicate(Poly& outputPoly)
+{
+	PolyNode* curr = head->next;
+	        while (curr != nullptr) {
+	            outputPoly.addMono(curr->deg, curr->coeff);
+	            curr = curr->next;
+	        }
+}
+
+int Poly::getDegree()
+{
+PolyNode* curr = head->next;
+    if (curr == nullptr) {
+        return -1;
+    }
+    int max_degree = curr->deg;
+    while (curr != nullptr) {
+        if (curr->deg > max_degree) {
+            max_degree = curr->deg;
+        }
+        curr = curr->next;
+    }
+    return max_degree;
+}
+int Poly::getTermsNo()
+{
+	int count = 0;
+		    PolyNode* cur = head->next;
+		    while (cur != nullptr) {
+		        // Count the number of non-zero terms
+		        if (cur->coeff != 0) {
+		            count++;
+		        }
+		        cur = cur->next;
+		    }
+		    return count;
+}
+
+double Poly::evaluate(double x)
+{
+	double result = 0;
+	    PolyNode* curr = head->next;
+	    while (curr != nullptr) {
+	        // Compute the value of each term and add it to the result
+	        result += curr->coeff * pow(x, curr->deg);
+	        curr = curr->next;
+	    }
+	    return result;
+}
+
+std::string Poly::toString()
+{
+	std::string result;
+    bool firstTerm = true;
+    for (int i = degree; i >= 0; i--) {
+        if (coeff[i] != 0) {
+            if (!firstTerm) {
+                result += " + ";
+            }
+
+            if (coeff[i] == -1 && i > 0) {
+                result += "-";
+            } else if (coeff[i] != 1 || i == 0) {
+                result += std::to_string(coeff[i]);
+            }
+            if (i > 1) {
+                result += "x^" + std::to_string(i);
+            } else if (i == 1) {
+                result += "x";
+            }
+            firstTerm = false;
+        }
+    }
+    if (firstTerm) {
+        result = "0";
+    }
+    return result;
+}
+
+
+
+
+
