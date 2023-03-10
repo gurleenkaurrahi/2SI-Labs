@@ -1,0 +1,110 @@
+#include "HugeInteger.h"
+#include<vector>
+
+HugeInteger::HugeInteger(const std::string& val) {
+
+	if (val.empty()){
+		throw std::invalid_argument("This string is empty.");
+	}
+	if (val[0] == '-'){
+		negative_num = true;
+		if (val.size() == 1){
+			throw std::invalid_argument("This string is invalid since it contains only one character.");
+		}
+	}
+	for (int i = (val[0] == '-' ? 1 : 0); i < val.size(); i++) {
+		if (val[i] < '0' || val[i] > '9') {
+			throw std::invalid_argument("All characters are invalid in this string.");
+		} 
+		else
+		{
+			huge_val.push_back(val[i]-'0');
+		}
+	} 
+}
+
+HugeInteger::HugeInteger(int n) {
+	if(n < 1) {
+            throw std::invalid_argument("Invalid input.");
+        }
+
+
+        for(int i=0; i<n; i++){
+        	if(i==0)
+        		huge_val.push_back(rand()%9+1);
+        	else
+        		huge_val.push_back(rand()%10);
+        }
+    }
+
+HugeInteger HugeInteger::add(const HugeInteger& h) {
+	
+	int carry = 0;
+	int len_this = huge_val.size();
+	int len_h = h.huge_val.size();
+
+	int sum = 0;
+
+	int idx_this = len_this -1;
+	int idx_h = len_h -1;
+
+	std::string output;
+
+	while(idx_this >=0 || idx_h >=0)
+	{
+		int num_this = 0;
+		int num_h = 0;
+		if(idx_this>=0) num_this = huge_val[idx_this];
+		if(idx_h>=0) num_h = h.huge_val[idx_h];
+
+		sum = num_this + num_h + carry;
+		carry = 0;
+		idx_this--;
+		idx_h--;
+
+		if(sum>=10)
+		{
+			carry = 1;
+			sum = sum%10;
+		}
+
+		output.insert(0, std::to_string(sum));
+	}
+
+	if(carry)
+	{
+		output.insert(0, std::to_string(carry));
+	}
+
+
+
+	return HugeInteger(output);
+}
+
+HugeInteger HugeInteger::subtract(const HugeInteger& h) {
+	// TODO
+	return HugeInteger("");
+}
+
+HugeInteger HugeInteger::multiply(const HugeInteger& h) {
+	// TODO
+	return HugeInteger("");
+}
+
+int HugeInteger::compareTo(const HugeInteger& h) {
+	// TODO
+	return 0;
+}
+
+std::string HugeInteger::toString() {
+	std::string output ="";
+	if (negative_num==true) {
+		output += '-';
+
+	}
+	for (int i=0; i<huge_val.size(); i++){
+		output+=std::to_string(huge_val[i]);
+	}
+
+	return output;
+}
